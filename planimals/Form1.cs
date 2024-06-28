@@ -21,9 +21,14 @@ namespace planimals
 {
     public partial class Form1 : Form
     {
-
         //instantiatig a card is good, now have to make a hand of em
         //store hand into the Hand table
+        //done that thing also^^^^
+        //now i have to draw a field where cards are going to be placed
+        //if the card is not placed in the field put it to the initial location
+        //if it is then start the q of cards
+        //after that i need a button that will start the process of validating the chain
+        //if the chain is correct add 10 points to the score and draw a new card
 
 
         List<(Card, Point, Point, long, long)> MoveList;
@@ -188,7 +193,6 @@ namespace planimals
         private void MouseLeftClick(object sender, MouseEventArgs e)
         {
             MoveList.Clear();
-            //EaseInOut(PlayerHand[2], e.Location, 1000);
             int i = SearchPickedCard();
             if (i == 0 && PlayerHand[0].Picked)
             {

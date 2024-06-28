@@ -16,8 +16,6 @@ namespace planimals
         private int hierarchy;
         public string habitat;
 
-        //private int pictureBoxWidth = 200;
-        //private int pictureBoxHight = 270;
         private static int pictureBoxWidth = Form1.formHight / 8;
         private int pictureBoxHight = Form1.formWidth / 10;
         public Card(string sname, string cname, string desc, string path, int hier, string habt, Point position)
