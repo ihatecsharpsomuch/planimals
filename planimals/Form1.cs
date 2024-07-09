@@ -20,7 +20,6 @@ namespace planimals
         //after that i need a button that will start the process of validating the chain
         //if the chain is correct add 10 points to the score and draw a new card
 
-
         List<(Card, Point, Point, long, long)> MoveList;
         static Random rnd;
         static List<Card> PlayerHand;
@@ -173,13 +172,12 @@ namespace planimals
         #region fancy card moving
         private void EaseInOut(Card card, Point endPosition, long length)
         {
-            Point offset = new Point(endPosition.X - card.Location.X - card.Height / 2, endPosition.Y - card.Location.Y - card.Width / 2);
+            Point offset = new Point(endPosition.X - card.Location.X - card.Width / 2, endPosition.Y - card.Location.Y - card.Height / 2);
             (Card, Point, Point, long, long) data = (card, card.Location, offset, length, sw.ElapsedMilliseconds);
             MoveList.Add(data);
             card.Picked = false;
             card.BackColor = Color.Gray;
         }
-
         private void MoveCards(object sender, EventArgs e)
         {
             long currentTime = sw.ElapsedMilliseconds;
