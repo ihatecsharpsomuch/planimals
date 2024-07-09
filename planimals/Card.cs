@@ -16,8 +16,8 @@ namespace planimals
         private int hierarchy;
         public string habitat;
 
-        private static int pictureBoxWidth = Form1.formHight / 8;
-        private int pictureBoxHight = Form1.formWidth / 10;
+        private static int pictureBoxWidth = Form1.formHeight / 8;
+        private int pictureBoxHeight = Form1.formWidth / 10;
         public Card(string sname, string cname, string desc, string path, int hier, string habt, Point position)
         {
             scientific_name = sname;
@@ -28,7 +28,7 @@ namespace planimals
 
             Image = Image.FromFile(path);
             SizeMode = PictureBoxSizeMode.Zoom;
-            Size = new Size(pictureBoxWidth, pictureBoxHight);
+            Size = new Size(pictureBoxWidth, pictureBoxHeight);
             Location = new Point(position.X, position.Y);
             BackColor = Color.Gray;
             Picked = false;

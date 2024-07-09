@@ -1,21 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Data.Sql;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Forms;
-using System.Xml.Schema;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace planimals
 {
@@ -32,38 +22,39 @@ namespace planimals
 
 
         List<(Card, Point, Point, long, long)> MoveList;
-        static string[] organisms;
         static Random rnd;
         static List<Card> PlayerHand;
         private Timer timer;
         Stopwatch sw;
 
-        public static int formHight;
+        public static int formHeight;
         public static int formWidth;
 
+        public static int workingHeight;
+        public static int workingWidth;
 
-        //\\\\\
         private static string currentDir = Environment.CurrentDirectory;
-        private static string dbPath = currentDir + "\\db\\cards.mdf";
-        //\\\\\
-        //I have to upload Cards.mdf to OneDrive and give a public access to it so that everyone can get access
-        //to the db without installing it locally
+        private static string dbPath = currentDir + "\\cards.mdf";
 
         private static string connectionString = "Data Source=(LocalDB)\\MSSQLLocalDB;" +
             $"AttachDbFilename={dbPath}" +
             ";Integrated Security=True;Connect Timeout=30";
-
+        private static readonly SqlConnection sqlConnection = new SqlConnection(connectionString);
         public Form1()
         {
+
             InitializeComponent();
             FormBorderStyle = FormBorderStyle.Fixed3D;
             MinimizeBox = false;
+            MaximizeBox = false;
             StartPosition = FormStartPosition.CenterScreen;
             //Size = new Size(Screen.PrimaryScreen.WorkingArea.Width / 2, Screen.PrimaryScreen.WorkingArea.Height / 2);
-            formHight = Screen.PrimaryScreen.WorkingArea.Height;
+            formHeight = Screen.PrimaryScreen.WorkingArea.Height;
             formWidth = Screen.PrimaryScreen.WorkingArea.Width;
+            workingHeight = ClientRectangle.Height;
+            workingWidth = ClientRectangle.Width;
 
-            Size = new Size(formWidth, formHight);
+            Size = new Size(formWidth, formHeight);
 
             BackColor = Color.Black;
             //drawFieldBorders();
@@ -71,8 +62,8 @@ namespace planimals
             var drawCardButton = new Button();
             drawCardButton.Text = "Draw a Card";
             drawCardButton.BackColor = Color.White;
-            drawCardButton.Size = new Size(formWidth / 15, formHight / 15);
-            drawCardButton.Location = new Point(formWidth - (formWidth / 10), formHight / 2);
+            drawCardButton.Size = new Size(formWidth / 15, formHeight / 15);
+            drawCardButton.Location = new Point(formWidth - (formWidth / 10), formHeight / 2);
             Controls.Add(drawCardButton);
             drawCardButton.Click += new EventHandler(drawCardButton_Click);
 
@@ -84,7 +75,6 @@ namespace planimals
             timer.Start();
             sw.Start();
 
-            organisms = new string[] { "Accipiter gentilis", "Acinonyx jubatus", "Agropyron cristatum", "Agrostis gigantea", "Ailuropoda melanoleuca", "Alces alces", "Alopecurus pratensis", "Andropogon gerardii", "Aquila chrysaetos", "Avena sativa", "Bos taurus", "Bouteloua gracilis", "Bromus catharticus", "Bromus inermis", "Buteo jamaicensis", "Canis lupus", "Capra aegagrus hircus", "Connochaetes taurinus", "Cynodon dactylon", "Dactylis glomerata", "Diceros bicornis", "Digitaria sanguinalis", "Elaphe obsoleta", "Elymus canadensis", "Elymus repens", "Equus ferus caballus", "Equus quagga", "Falco peregrinus", "Festuca arundinacea", "Giraffa camelopardalis", "Glyceria maxima", "Hippopotamus amphibius", "Hordeum vulgare", "Lepus arcticus", "Lolium multiflorum", "Lolium perenne", "Loxodonta africana", "Medicago sativa", "Odocoileus virginianus", "Ovis aries", "Panicum virgatum", "Panthera leo", "Panthera onca", "Panthera pardus", "Pantherophis guttatus", "Pennisetum glaucum", "Phalaris arundinacea", "Phleum pratense", "Poa annua", "Poa pratensis", "Rangifer tarandus", "Schizachyrium scoparium", "Setaria viridis", "Sorghastrum nutans", "Sorghum bicolor", "Sporobolus heterolepis", "Trifolium pratense", "Trifolium repens", "Ursus maritimus", "Zea mays" };
             rnd = new Random();
             PlayerHand = new List<Card>();
 
@@ -113,39 +103,73 @@ namespace planimals
             DrawCard(PlayerHand);
             Controls.Add(PlayerHand[PlayerHand.Count - 1]);
         }
-
-        public static void DrawCard(List<Card> playerHand)
+        public static int GetNumberOfOrganisms()
         {
-            int randInx = rnd.Next(60);
-            var sciname = organisms[randInx];
-            SqlConnection sqlConnection = new SqlConnection(connectionString);
-            SqlCommand sqlCommand = new SqlCommand($"SELECT * FROM Organism WHERE Scientific_name='{sciname}'", sqlConnection);
-            sqlConnection.Open();
-            using (SqlDataReader reader = sqlCommand.ExecuteReader())
+            int count = 0;
+            using (SqlConnection sqlConnection = new SqlConnection(connectionString))
             {
-                while (reader.Read())
+                SqlCommand sqlCommand = new SqlCommand("SELECT COUNT(*) AS num FROM Organisms", sqlConnection);
+                sqlConnection.Open();
+                using (var reader = sqlCommand.ExecuteReader())
                 {
-                    var cname = reader["Common_name"].ToString();
-                    var desc = reader["Description"].ToString();
-                    var path = currentDir + "\\assets\\photos\\" + $"{sciname}.jpg";
-                    int hierarchy = (int)reader["Hierarchy"];
-                    var habitat = reader["Habitat"].ToString();
-
-                    if (playerHand.Count == 0)
+                    while (reader.Read())
                     {
-                        Card c = new Card(sciname, cname, desc, path, hierarchy, habitat, new Point(10, 10));
-                        playerHand.Add(c);
-                    }
-                    else
-                    {
-                        Card c = new Card(sciname, cname, desc, path, hierarchy, habitat, new Point(playerHand[(playerHand.Count) - 1].Location.X + 100, playerHand[(playerHand.Count) - 1].Location.Y));
-                        playerHand.Add(c);
+                        count = int.Parse(reader["num"].ToString());
                     }
                 }
             }
-            sqlConnection.Close();
+            return count;
         }
+        public static string GetRandomScientificName()
+        {
+            int noOfOrganisms = GetNumberOfOrganisms();
+            int randInx = rnd.Next(noOfOrganisms);
+            using (SqlConnection sqlConnection = new SqlConnection(connectionString))
+            {
+                SqlCommand sqlCommand = new SqlCommand($"WITH Numbered AS (SELECT Scientific_name, ROW_NUMBER() OVER(ORDER BY Scientific_name) as ROW_NUM FROM Organisms) SELECT Scientific_name FROM Numbered where ROW_NUM = {randInx}", sqlConnection);
+                sqlConnection.Open();
+                using (var reader = sqlCommand.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        return reader["Scientific_name"].ToString();
+                    }
+                }
+            }
+            return null;
+        }
+        public static void DrawCard(List<Card> playerHand)
+        {
+            string sciname = GetRandomScientificName();
+            using (SqlConnection sqlConnection = new SqlConnection(connectionString))
+            {
+                SqlCommand sqlCommand = new SqlCommand($"SELECT * FROM Organisms WHERE Scientific_name='{sciname}'", sqlConnection);
+                sqlConnection.Open();
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var cname = reader["Common_name"].ToString();
+                        var desc = reader["Description"].ToString();
+                        var path = currentDir + "\\assets\\photos\\" + $"{sciname}.jpg";
+                        int hierarchy = (int)reader["Hierarchy"];
+                        var habitat = reader["Habitat"].ToString();
 
+                        if (playerHand.Count == 0)
+                        {
+                            Card c = new Card(sciname, cname, desc, path, hierarchy, habitat, new Point(20, workingHeight));
+                            playerHand.Add(c);
+                        }
+                        else
+                        {
+                            Card c = new Card(sciname, cname, desc, path, hierarchy, habitat, new Point(playerHand[(playerHand.Count) - 1].Location.X + 100, playerHand[(playerHand.Count) - 1].Location.Y));
+                            playerHand.Add(c);
+                        }
+                    }
+                }
+            }
+        }
+        //Daniel's code
         #region fancy card moving
         private void EaseInOut(Card card, Point endPosition, long length)
         {
@@ -219,7 +243,7 @@ namespace planimals
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < 1; i++)
             {
                 DrawCard(PlayerHand);
             }
