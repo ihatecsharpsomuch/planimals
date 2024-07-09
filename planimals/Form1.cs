@@ -39,6 +39,8 @@ namespace planimals
             $"AttachDbFilename={dbPath}" +
             ";Integrated Security=True;Connect Timeout=30";
         private static readonly SqlConnection sqlConnection = new SqlConnection(connectionString);
+
+        private Rectangle rectangle = new Rectangle(400, 200, 1200, 600);
         public Form1()
         {
 
@@ -46,6 +48,7 @@ namespace planimals
             FormBorderStyle = FormBorderStyle.Fixed3D;
             MinimizeBox = false;
             MaximizeBox = false;
+            Text = "Planimals";
             StartPosition = FormStartPosition.CenterScreen;
             //Size = new Size(Screen.PrimaryScreen.WorkingArea.Width / 2, Screen.PrimaryScreen.WorkingArea.Height / 2);
             formHeight = Screen.PrimaryScreen.WorkingArea.Height;
@@ -78,9 +81,30 @@ namespace planimals
             PlayerHand = new List<Card>();
 
             this.MouseClick += new MouseEventHandler(MouseLeftClick);
+            this.Paint += new PaintEventHandler(Form1_Paint);
+
 
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            for (int i = 0; i < 1; i++)
+            {
+                DrawCard(PlayerHand);
+            }
+            foreach (Card card in PlayerHand)
+            {
+                Controls.Add(card);
+            }
+        }
+        private void Form1_Paint(object sender, PaintEventArgs e)
+        {
+            // Draw the rectangle
+            using (Pen pen = new Pen(Color.White, 10.0f))
+            {
+                e.Graphics.DrawRectangle(pen, rectangle);
+            }
+        }
         public void drawFieldBorders(PaintEventArgs e)
         {
             Point p1 = new Point(100, 100);
@@ -238,17 +262,5 @@ namespace planimals
             return 0;
         }
         #endregion
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            for (int i = 0; i < 1; i++)
-            {
-                DrawCard(PlayerHand);
-            }
-            foreach (Card card in PlayerHand)
-            {
-                Controls.Add(card);
-            }
-        }
     }
 }
