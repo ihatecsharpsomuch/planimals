@@ -41,42 +41,27 @@ namespace planimals
 
         private Rectangle fieldRectangle;
 
+        private PictureBox drawCardButton = new PictureBox();
+        private Image back;
+        private Rectangle cardRectangle;
+
         public Form1()
         {
 
             InitializeComponent();
             FormBorderStyle = FormBorderStyle.Fixed3D;
-            var bounds = Screen.PrimaryScreen.Bounds;
             MinimizeBox = false;
             Text = "Planimals";
             StartPosition = FormStartPosition.CenterScreen;
 
             Height = Screen.PrimaryScreen.WorkingArea.Height;
             Width = Screen.PrimaryScreen.WorkingArea.Width;
-
             workingHeight = ClientRectangle.Height;
             workingWidth = ClientRectangle.Width;
 
             fieldRectangle = new Rectangle(workingWidth/100 * 20, workingHeight / 4, workingWidth / 10 * 6, workingHeight / 2);
 
             BackColor = Color.Black;
-
-            var drawCardButton = new PictureBox();
-            drawCardButton.Width = workingHeight / 8;
-            drawCardButton.Height = workingWidth / 10;
-            drawCardButton.SizeMode = PictureBoxSizeMode.StretchImage;
-            drawCardButton.Location = new Point(workingWidth - drawCardButton.Width - workingHeight / 100 * 5, workingHeight / 2 - drawCardButton.Height / 2);
-            Rectangle cardRectangle = new Rectangle(workingWidth - drawCardButton.Width - workingHeight / 100 * 5, workingHeight / 2 - drawCardButton.Height / 2, workingHeight / 8, workingWidth / 10);
-            drawCardButton.Image = Image.FromFile(currentDir + "\\assets\\photos\\back.png");
-            Controls.Add(drawCardButton);
-            drawCardButton.Click += new EventHandler(drawCardButton_Click);
-
-            if (MousePosition.X < cardRectangle.Right && MousePosition.X > cardRectangle.Left && MousePosition.Y < cardRectangle.Bottom && MousePosition.Y > cardRectangle.Top) 
-            {
-                Bitmap b = new Bitmap(drawCardButton.Image);
-            }
-
-
 
             MoveList = new List<(Card, Point, Point, long, long)>();
             timer = new Timer();
@@ -86,11 +71,23 @@ namespace planimals
             timer.Start();
             sw.Start();
 
+            back = Image.FromFile(currentDir + "\\assets\\photos\\back.png");
+            drawCardButton.SizeMode = PictureBoxSizeMode.StretchImage;
+            drawCardButton.Width = workingHeight / 8;
+            drawCardButton.Height = workingWidth / 10;
+            drawCardButton.Location = new Point(workingWidth - drawCardButton.Width - workingHeight / 100 * 5, workingHeight / 2 - drawCardButton.Height / 2);
+            cardRectangle = new Rectangle(workingWidth - drawCardButton.Width - workingHeight / 100 * 5, workingHeight / 2 - drawCardButton.Height / 2, workingHeight / 8, workingWidth / 10);
+            drawCardButton.Image = back;
+            Controls.Add(drawCardButton);
+            drawCardButton.Click += new EventHandler(drawCardButton_Click);
+            drawCardButton.MouseMove += DrawCardButton_MouseMove;
+
             rnd = new Random();
             playerHand = new List<Card>();
 
             this.MouseClick += new MouseEventHandler(MouseLeftClick);
             this.Paint += new PaintEventHandler(DrawFieldBorders);
+            this.MouseMove += DrawCardButton_MouseMove;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -111,11 +108,23 @@ namespace planimals
                 e.Graphics.DrawRectangle(pen, fieldRectangle);
             }
         }
-
         public void drawCardButton_Click(object sender, EventArgs e)
         {
             DrawCard(playerHand);
             Controls.Add(playerHand[playerHand.Count - 1]);
+        }
+        private void DrawCardButton_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (MousePosition.X < cardRectangle.Right && MousePosition.X > cardRectangle.Left && MousePosition.Y < cardRectangle.Bottom && MousePosition.Y > cardRectangle.Top)
+            {
+                drawCardButton.Width = workingHeight / 8 + 5;
+                drawCardButton.Height = workingWidth / 10 + 5;
+            } 
+            else
+            {
+                drawCardButton.Width = workingHeight / 8;
+                drawCardButton.Height = workingWidth / 10;
+            }
         }
 
         public int GetNumberOfOrganisms()
@@ -246,7 +255,6 @@ namespace planimals
             double y = Math.Pow(1 - Math.Pow(x - 1, 2), 0.5f);
             return y;
         }
-
         private void MouseLeftClick(object sender, MouseEventArgs e)
         {
             MoveList.Clear();
@@ -260,7 +268,6 @@ namespace planimals
                 EaseInOut(playerHand[i], e.Location, 1000);
             }
         }
-
         private int SearchPickedCard()
         {
             foreach (Card c in playerHand)
