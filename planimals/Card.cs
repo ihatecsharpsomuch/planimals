@@ -9,6 +9,7 @@ namespace planimals
     public class Card : PictureBox
     {
         public bool Picked;
+        public Point previousLocation;
 
         public string scientific_name;
         public string common_name;
@@ -16,8 +17,9 @@ namespace planimals
         private int hierarchy;
         public string habitat;
 
-        public static int pictureBoxWidth = Form1.formHeight / 8;
-        public static int pictureBoxHeight = Form1.formWidth / 10;
+        public static int pictureBoxWidth = Form1.workingHeight / 8;
+        public static int pictureBoxHeight = Form1.workingWidth / 10;
+
         public Card(string sname, string cname, string desc, string path, int hier, string habt, Point position)
         {
             scientific_name = sname;
@@ -33,6 +35,7 @@ namespace planimals
             SizeMode = PictureBoxSizeMode.Zoom;
             Size = new Size(pictureBoxWidth, pictureBoxHeight);
             Location = new Point(position.X, position.Y);
+            previousLocation = Location;
             BackColor = Color.Gray;
             Picked = false;
 

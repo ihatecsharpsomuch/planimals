@@ -22,12 +22,11 @@ namespace planimals
 
         List<(Card, Point, Point, long, long)> MoveList;
         static Random rnd;
-        static List<Card> PlayerHand;
+        public static List<Card> playerHand;
         private Timer timer;
         Stopwatch sw;
 
-        public static int formHeight;
-        public static int formWidth;
+        public List<Card> chain;
 
         public static int workingHeight;
         public static int workingWidth;
@@ -40,34 +39,44 @@ namespace planimals
             ";Integrated Security=True;Connect Timeout=30";
         private static readonly SqlConnection sqlConnection = new SqlConnection(connectionString);
 
-        private Rectangle rectangle = new Rectangle(400, 200, 1200, 600);
+        private Rectangle fieldRectangle;
+
         public Form1()
         {
 
             InitializeComponent();
             FormBorderStyle = FormBorderStyle.Fixed3D;
+            var bounds = Screen.PrimaryScreen.Bounds;
             MinimizeBox = false;
-            MaximizeBox = false;
             Text = "Planimals";
             StartPosition = FormStartPosition.CenterScreen;
-            //Size = new Size(Screen.PrimaryScreen.WorkingArea.Width / 2, Screen.PrimaryScreen.WorkingArea.Height / 2);
-            formHeight = Screen.PrimaryScreen.WorkingArea.Height;
-            formWidth = Screen.PrimaryScreen.WorkingArea.Width;
+
+            Height = Screen.PrimaryScreen.WorkingArea.Height;
+            Width = Screen.PrimaryScreen.WorkingArea.Width;
+
             workingHeight = ClientRectangle.Height;
             workingWidth = ClientRectangle.Width;
 
-            Size = new Size(formWidth, formHeight);
+            fieldRectangle = new Rectangle(workingWidth/100 * 20, workingHeight / 4, workingWidth / 10 * 6, workingHeight / 2);
 
             BackColor = Color.Black;
-            //drawFieldBorders();
 
-            var drawCardButton = new Button();
-            drawCardButton.Text = "Draw a Card";
-            drawCardButton.BackColor = Color.White;
-            drawCardButton.Size = new Size(formWidth / 15, formHeight / 15);
-            drawCardButton.Location = new Point(formWidth - (formWidth / 10), formHeight / 2);
+            var drawCardButton = new PictureBox();
+            drawCardButton.Width = workingHeight / 8;
+            drawCardButton.Height = workingWidth / 10;
+            drawCardButton.SizeMode = PictureBoxSizeMode.StretchImage;
+            drawCardButton.Location = new Point(workingWidth - drawCardButton.Width - workingHeight / 100 * 5, workingHeight / 2 - drawCardButton.Height / 2);
+            Rectangle cardRectangle = new Rectangle(workingWidth - drawCardButton.Width - workingHeight / 100 * 5, workingHeight / 2 - drawCardButton.Height / 2, workingHeight / 8, workingWidth / 10);
+            drawCardButton.Image = Image.FromFile(currentDir + "\\assets\\photos\\back.png");
             Controls.Add(drawCardButton);
             drawCardButton.Click += new EventHandler(drawCardButton_Click);
+
+            if (MousePosition.X < cardRectangle.Right && MousePosition.X > cardRectangle.Left && MousePosition.Y < cardRectangle.Bottom && MousePosition.Y > cardRectangle.Top) 
+            {
+                Bitmap b = new Bitmap(drawCardButton.Image);
+            }
+
+
 
             MoveList = new List<(Card, Point, Point, long, long)>();
             timer = new Timer();
@@ -78,55 +87,38 @@ namespace planimals
             sw.Start();
 
             rnd = new Random();
-            PlayerHand = new List<Card>();
+            playerHand = new List<Card>();
 
             this.MouseClick += new MouseEventHandler(MouseLeftClick);
-            this.Paint += new PaintEventHandler(Form1_Paint);
-
-
+            this.Paint += new PaintEventHandler(DrawFieldBorders);
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             for (int i = 0; i < 1; i++)
             {
-                DrawCard(PlayerHand);
+                DrawCard(playerHand);
             }
-            foreach (Card card in PlayerHand)
+            foreach (Card card in playerHand)
             {
                 Controls.Add(card);
             }
         }
-        private void Form1_Paint(object sender, PaintEventArgs e)
+        public void DrawFieldBorders(object sender, PaintEventArgs e)
         {
-            // Draw the rectangle
             using (Pen pen = new Pen(Color.White, 10.0f))
             {
-                e.Graphics.DrawRectangle(pen, rectangle);
-            }
-        }
-        public void drawFieldBorders(PaintEventArgs e)
-        {
-            Point p1 = new Point(100, 100);
-            Point p2 = new Point(300, 100);
-            Point p3 = new Point(100, 200);
-            Point p4 = new Point(300, 200);
-            OnPaint(e);
-
-            using (var p = new Pen(Color.Green, 3)) { 
-                e.Graphics.DrawLine(p, p1, p2);
-                e.Graphics.DrawLine(p, p1, p3);
-                e.Graphics.DrawLine(p, p2, p4);
-                e.Graphics.DrawLine(p, p3, p4);
+                e.Graphics.DrawRectangle(pen, fieldRectangle);
             }
         }
 
         public void drawCardButton_Click(object sender, EventArgs e)
         {
-            DrawCard(PlayerHand);
-            Controls.Add(PlayerHand[PlayerHand.Count - 1]);
+            DrawCard(playerHand);
+            Controls.Add(playerHand[playerHand.Count - 1]);
         }
-        public static int GetNumberOfOrganisms()
+
+        public int GetNumberOfOrganisms()
         {
             int count = 0;
             using (SqlConnection sqlConnection = new SqlConnection(connectionString))
@@ -143,7 +135,7 @@ namespace planimals
             }
             return count;
         }
-        public static string GetRandomScientificName()
+        public string GetRandomScientificName()
         {
             int noOfOrganisms = GetNumberOfOrganisms();
             int randInx = rnd.Next(noOfOrganisms);
@@ -161,7 +153,7 @@ namespace planimals
             }
             return null;
         }
-        public static void DrawCard(List<Card> playerHand)
+        public void DrawCard(List<Card> playerHand)
         {
             string sciname = GetRandomScientificName();
             using (SqlConnection sqlConnection = new SqlConnection(connectionString))
@@ -180,11 +172,23 @@ namespace planimals
 
                         if (playerHand.Count == 0)
                         {
-                            Card c = new Card(sciname, cname, desc, path, hierarchy, habitat, new Point(20, workingHeight));
+                            Card c = new Card(sciname, cname, desc, path, hierarchy, habitat, new Point(Width/2 - Card.pictureBoxWidth/2, Height - Card.pictureBoxHeight));
+                            playerHand.Add(c);
+                        } 
+                        else if (playerHand[playerHand.Count - 1].Location.Y != Height - Card.pictureBoxHeight) 
+                        {
+                            Card c = new Card(sciname, cname, desc, path, hierarchy, habitat, new Point(Width / 2 - Card.pictureBoxWidth / 2, Height - Card.pictureBoxHeight));
                             playerHand.Add(c);
                         }
                         else
                         {
+                            foreach (Card card in playerHand)
+                            {
+                                if (card.Location.Y == Height - Card.pictureBoxHeight)
+                                {
+                                    card.Location = new Point(int.Parse((card.Location.X - Math.Pow(playerHand.Count, 2)).ToString()), card.Location.Y);
+                                }
+                            }
                             Card c = new Card(sciname, cname, desc, path, hierarchy, habitat, new Point(playerHand[(playerHand.Count) - 1].Location.X + 100, playerHand[(playerHand.Count) - 1].Location.Y));
                             playerHand.Add(c);
                         }
@@ -196,11 +200,18 @@ namespace planimals
         #region fancy card moving
         private void EaseInOut(Card card, Point endPosition, long length)
         {
-            Point offset = new Point(endPosition.X - card.Location.X - card.Width / 2, endPosition.Y - card.Location.Y - card.Height / 2);
-            (Card, Point, Point, long, long) data = (card, card.Location, offset, length, sw.ElapsedMilliseconds);
-            MoveList.Add(data);
-            card.Picked = false;
-            card.BackColor = Color.Gray;
+            if (endPosition.X < fieldRectangle.Right && endPosition.X > fieldRectangle.Left && endPosition.Y > fieldRectangle.Top && endPosition.Y < fieldRectangle.Bottom)
+            {
+                Point offset = new Point(endPosition.X - card.Location.X - card.Width / 2, endPosition.Y - card.Location.Y - card.Height / 2);
+                (Card, Point, Point, long, long) data = (card, card.Location, offset, length, sw.ElapsedMilliseconds);
+                MoveList.Add(data);
+                card.Picked = false;
+                card.BackColor = Color.Gray;
+            } else
+            {
+                card.Picked = false;
+                card.BackColor = Color.Gray;
+            }
         }
         private void MoveCards(object sender, EventArgs e)
         {
@@ -240,23 +251,23 @@ namespace planimals
         {
             MoveList.Clear();
             int i = SearchPickedCard();
-            if (i == 0 && PlayerHand[0].Picked)
+            if (i == 0 && playerHand[0].Picked)
             {
-                EaseInOut(PlayerHand[i], e.Location, 1000);
+                EaseInOut(playerHand[i], e.Location, 1000);
             }
             else if (i != 0)
             {
-                EaseInOut(PlayerHand[i], e.Location, 1000);
+                EaseInOut(playerHand[i], e.Location, 1000);
             }
         }
 
         private int SearchPickedCard()
         {
-            foreach (Card c in PlayerHand)
+            foreach (Card c in playerHand)
             {
                 if (c.Picked == true)
                 {
-                    return PlayerHand.IndexOf(c);
+                    return playerHand.IndexOf(c);
                 }
             }
             return 0;
