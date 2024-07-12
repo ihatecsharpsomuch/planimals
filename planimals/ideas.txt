@@ -1,0 +1,118 @@
+asking chatgpt how to improve database
+//Attempt 1
+1. **Size**: This can help determine the feasibility of one organism preying on another.
+   - Column: `Size`
+   - Possible values: Small, Medium, Large
+
+2. **Diet**: Specifies what the organism eats.
+   - Column: `Diet`
+   - Possible values: Herbivore, Carnivore, Omnivore
+
+3. **Prey**: List of organisms that this organism preys upon.
+   - Column: `Prey`
+   - Possible values: List of scientific names or a foreign key reference to the same table
+
+4. **Predators**: List of organisms that prey on this organism.
+   - Column: `Predators`
+   - Possible values: List of scientific names or a foreign key reference to the same table
+
+5. **Activity Period**: Specifies when the organism is active (diurnal, nocturnal, crepuscular).
+   - Column: `Activity_Period`
+   - Possible values: Diurnal, Nocturnal, Crepuscular
+
+6. **Biome**: More specific than habitat, this specifies the ecological community the organism belongs to.
+   - Column: `Biome`
+   - Possible values: Forest, Grassland, Desert, Tundra, Freshwater, Marine, etc.
+
+7. **Social Structure**: Whether the organism is solitary, lives in pairs, or in groups.
+   - Column: `Social_Structure`
+   - Possible values: Solitary, Pair, Group
+
+8. **Geographic Range**: Specifies the regions where the organism is found.
+   - Column: `Geographic_Range`
+   - Possible values: List of continents, countries, or specific regions
+
+Here's how your updated schema might look:
+
+| Column            | Type      | Description |
+|-------------------|-----------|-------------|
+| `Scientific_Name` | VARCHAR   | Primary Key |
+| `Common_Name`     | VARCHAR   |             |
+| `Habitat`         | VARCHAR   |             |
+| `Hierarchy`       | INT       |             |
+| `Description`     | TEXT      |             |
+| `Size`            | VARCHAR   | Small, Medium, Large |
+| `Diet`            | VARCHAR   | Herbivore, Carnivore, Omnivore |
+| `Prey`            | VARCHAR[] | List of scientific names or foreign key reference |
+| `Predators`       | VARCHAR[] | List of scientific names or foreign key reference |
+| `Activity_Period` | VARCHAR   | Diurnal, Nocturnal, Crepuscular |
+| `Biome`           | VARCHAR   | Forest, Grassland, Desert, etc. |
+| `Social_Structure`| VARCHAR   | Solitary, Pair, Group |
+| `Geographic_Range`| VARCHAR[] | List of continents, countries, or specific regions |
+
+
+//Attempt 2
+
+
+### 1. Main Table: `Organisms`
+
+| Column            | Type      | Description |
+|-------------------|-----------|-------------|
+| `Scientific_Name` | VARCHAR   | Primary Key |
+| `Common_Name`     | VARCHAR   |             |
+| `Habitat`         | VARCHAR   |             |
+| `Hierarchy`       | INT       |             |
+| `Description`     | TEXT      |             |
+| `Size`            | VARCHAR   | Small, Medium, Large |
+| `Diet`            | VARCHAR   | Herbivore, Carnivore, Omnivore |
+| `Activity_Period` | VARCHAR   | Diurnal, Nocturnal, Crepuscular |
+| `Biome`           | VARCHAR   | Forest, Grassland, Desert, etc. |
+| `Social_Structure`| VARCHAR   | Solitary, Pair, Group |
+| `Geographic_Range`| VARCHAR[] | List of continents, countries, or specific regions |
+
+### 2. Linking Table: `Dietary_Relationships`
+This table will store the predator-prey relationships.
+
+| Column             | Type      | Description |
+|--------------------|-----------|-------------|
+| `Predator`         | VARCHAR   | Foreign Key to `Scientific_Name` in `Organisms` |
+| `Prey`             | VARCHAR   | Foreign Key to `Scientific_Name` in `Organisms` |
+
+### 3. Linking Table: `Geographic_Distribution`
+This table will store the geographic range for each organism.
+
+| Column             | Type      | Description |
+|--------------------|-----------|-------------|
+| `Scientific_Name`  | VARCHAR   | Foreign Key to `Scientific_Name` in `Organisms` |
+| `Region`           | VARCHAR   | Name of the region (continent, country, etc.) |
+
+### Benefits
+
+1. **Normalization**: By splitting the dietary relationships and geographic distribution into separate tables, you normalize the database, reducing redundancy and improving consistency.
+2. **Scalability**: This structure allows you to easily add new organisms and their relationships without modifying the existing schema.
+3. **Flexibility**: You can efficiently query relationships and distributions. For instance, finding all prey for a given predator, or all organisms in a specific region.
+
+### Example Queries
+
+1. **Find all prey for a given predator**:
+    ```sql
+    SELECT Prey 
+    FROM Dietary_Relationships 
+    WHERE Predator = 'Ursus_arctos';
+    ```
+
+2. **Find all predators for a given prey**:
+    ```sql
+    SELECT Predator 
+    FROM Dietary_Relationships 
+    WHERE Prey = 'Bos_taurus';
+    ```
+
+3. **Find all organisms in a specific region**:
+    ```sql
+    SELECT Scientific_Name 
+    FROM Geographic_Distribution 
+    WHERE Region = 'North America';
+    ```
+
+By implementing this design, it is better to manage the complexity of dietary relationships and geographic distributions, making the database more efficient and the game more accurate.
